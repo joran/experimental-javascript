@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>SO questions</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script type="text/javascript" src="js/libs/rxjs/rx.all.js"></script>
+        <script type="text/javascript" src="js/libs/rxjs/rx.dom.js"></script>
+
+    </head>
+    <body>
+        <div id="questions">QS</div>
+        <div id="question">Q</div>
+
+        <script>
+    var transformEventToTypedEvent = function(type){
+        return function(data){
+            return {
+                type: type,
+                data: data
+            };
+        };
+      };
+
+    var questionsUI = document.getElementById("questions");
+    var questionUI = document.getElementById("question");
+
+    var questionElement = function(q){
+        var str = "(";
+        str += q.answer_count;
+        str += ":";
+        str += q.view_count;
+        str += ") [";
+        for(var i = 0; i < q.tags.length; i++){
+            str += q.tags[i];
+            str += " ";
+        }
+        str += "]";
+
+        var body = document.createElement("DIV");
+        body.innerHTML = q.body;
+        body.style.display="none";
+        body.setAttribute("class", "questionBody")
+
+        var a = document.createElement("A");
+        a.href=q.link;
+        a.appendChild(document.createTextNode(q.title));
+
+        var root = document.createElement("DIV");
+        //root.setAttribute("data-qid", q.question_id)
+        root.dataset.qid=q.question_id;
+        root.classList.add("questionRoot")
+        root.appendChild(a);
+        root.appendChild(document.createTextNode(str))
+        root.appendChild(body);
+
+        return {
+          root: root,
+          hide: () => body.style.display="none",
+          show: () => body.style.display="block"
+        };
+      };
+
+    function appendQuestionElement(q){
+        questions.appendChild(q);
+    };
+    function observer(onNext, onError, onCompleted) {
+        return Rx.Observer.create(onNext, onError, onCompleted);
+    };
+
+    function findQustionRootElem(someElement){
+      if(someElement){
+        if(someElement.dataset.qid){
+            return someElement;
+          }
+          return findQustionRootElem(someElement.parentElement);
+      }
+      return null;
+    };
+
+    var mouseOverSrc = Rx.DOM.mouseover(questionsUI).map(transformEventToTypedEvent("mouseover"));
+    var mouseLeaveSrc = Rx.DOM.mouseleave(questionsUI).map(transformEventToTypedEvent("mouseleave"));
+    var mouseOutSrc = Rx.DOM.mouseout(questionsUI).map(transformEventToTypedEvent("mouseout"));
+
+    var questionsSrc =
+    Rx.DOM.ajax({ url: 'https://api.stackexchange.com/2.2/questions?pagesize=2&order=desc&sort=creation&tagged=git&site=stackoverflow&filter=withbody',
+        responseType: 'json', crossDomain:true})
+            .flatMap( (data) => Rx.Observable.from(data.response.items))
+            .map(transformEventToTypedEvent("ajax"));
+
+    var state = {
+      elementMap: {},
+      currentVisibleQid:0
+    };
+
+    var source = Rx.Observable.merge(mouseOutSrc, mouseOverSrc, questionsSrc);
+    source.subscribe(observer(function(evt){
+      console.log("OBSERVER RECEIVED EVENT", evt.type, evt.data);
+      switch(evt.type){
+        case "ajax":
+          var elem = questionElement(evt.data);
+          state.elementMap[elem.root.dataset.qid] = elem;
+          appendQuestionElement(elem.root);
+          console.log(elem.root.classList);
+          break;
+        case "mouseover":
+            var questionRootElem = findQustionRootElem(evt.data.target);
+            if(questionRootElem){
+              state.elementMap[questionRootElem.dataset.qid].show()
+            }
+            break;
+        case "mouseleave":
+          //elementMap[evt.data.target.dataset.qid].hide();
+          break;
+        case "mouseout":
+          var questionRootElem = findQustionRootElem(evt.data.target);
+          if(questionRootElem){
+            state.elementMap[questionRootElem.dataset.qid].hide()
+          }
+          break;
+        default:
+          console.log(evt);
+      }
+    }));
+
+/*
+    function showQuestion(x,q){
+        console.log(x,q);
+        questionUI.innerHTML = "<h2>"+q.title+"</h2><p>" +q.body+"</p>";
+    }
+*/
+    /*
+            .map(questionElement)
+            .tap((x)=> Rx.DOM.mouseover(x).subscribe(observer(showQuestion)))
+            .subscribe(observer(appendQuestionElement))
+    */
+//            .map(addQuestion),
+//            .tap((x) => Rx.DOM.mouseenter(x).subscribe(console.log))
+//            .tap((x) => Rx.DOM.mouseleave(x).subscribe(console.log))
+
+
+    //var mouseOver = Rx.Observable.fromEvent(questionsUI, "mouseover");
+    //var mouseMovesSubscriber = mouseOver.subscribe(createObserver("MOUSEOVER"));
+
+    function observer(onNext, onError, onCompleted) {
+        return Rx.Observer.create(onNext, onError, onCompleted);
+    };
+        </script>
+    </body>
+</html>

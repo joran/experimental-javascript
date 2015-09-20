@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>TODO supply a title</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script type="text/javascript" src="js/libs/rxjs/rx.all.js"></script>
+        <script type="text/javascript" src="js/libs/rxjs/rx.dom.js"></script>
+
+    </head>
+    <body>
+        <div>TODO write content bb</div>
+        <div id="questions"></div>
+        <div id="question"></div>
+        
+        <div id="debug"></div>
+        <div id="position"></div>
+        <div id="draggable">DRAG ME</div>
+        <div id="target">TARGET</div>
+        
+        <script>
+            var debugUI = document.getElementById("debug");
+            var positionUI = document.getElementById("position");
+            var targetUI = document.getElementById("target");
+            
+            var debug = (msg) => {
+                debugUI.innerHTML += msg + "<br>"; 
+            };
+
+            var printPosition = (e) => positionUI.innerHTML = e.clientX + ":" + e.clientY;
+            
+            /*
+            var timer = Rx.Observable.timer(0, 1000)
+                    .timestamp()
+                    .map(x => x.value + ":" + x.timestamp)
+                    .take(5)
+                    .do(x => debug("Side effect " + x));
+            
+            var interval = Rx.Observable.interval(500)
+                     .timeInterval()
+                     .take(3);
+             
+            var subscription = timer.subscribe(createObserver("TIMER"));
+            var subscription2 = interval.subscribe(createObserver("INTERVAL"));
+            var zip = createObserver("ZIP");
+            
+            Rx.Observable
+                    .zip(timer, interval, (a,b)=> debug("[zip] " + a + " " + JSON.stringify(b))).subscribe();
+            
+            var published = interval.publish();
+            published.subscribe(createObserver("SourceA"));
+            published.subscribe(createObserver("SourceB"));
+            var connection = published.connect();
+            
+            Rx.Observable
+                    .from([1,2,3,4,5,6,7,8,9,0])
+                    .subscribe(createObserver("FROM ARRAY"));
+            
+            Rx.Observable
+                    .from([1,2,3,4,5,6,7,8,9,0])
+                    .flatMap((i) => Rx.Observable.range(i,2))
+                    .subscribe(createObserver("FROM ARRAY-2"));
+            
+            Rx.Observable
+                    .from({length:3},  (v, k) => k)
+                    .subscribe(createObserver("FROM ARRAY_LIKE"));
+            
+            Rx.Observable
+                    .from(new Set([1,2,3,4,5,6,7,8,9,0]))
+                    .subscribe(createObserver("FROM SET"));
+            
+            Rx.Observable
+                    .from(new Map([['key1', 1],['key2', 2],['key3', 3]]))
+                    .subscribe(createObserver("FROM MAP"));
+            
+            
+            Rx.Observable
+                    .from(fibonacci())
+                    .take(7)
+                    .subscribe(createObserver("FROM FIBONACCI"));
+            
+            
+            var hot = Rx.Observable.interval(1000).publish();
+            var hotSubscriber1 = hot.subscribe(createObserver("DELAYED OBSERVER1"));
+            
+            setTimeout(function () {
+                hot.connect();
+                debug('[TIMEOUT 1] Current Time after connect: ' + Date.now());
+                setTimeout(function () {
+                    debug('[TIMEOUT 2] Current Time after 2nd subscription: ' + Date.now());
+                    var hotSubscriber2 = hot.subscribe(createObserver("DELAYED OBESERVER2"));
+                    
+                    setTimeout(function () {
+                        debug("[TIMEOUT DISPOSE] Disposing hot subscribers");
+                        hotSubscriber1.dispose();
+                        hotSubscriber2.dispose();
+                     }, 5000);
+                 }, 3000);
+             }, 3000);
+            */
+           /*
+            var mouseMoves = Rx.Observable.fromEvent(document, "mousemove"); 
+            var mouseMovesSubscriber = mouseMoves.subscribe(printPosition);
+            
+            Rx.Observable.fromEvent(positionUI, "click")
+                    .subscribe((e) => mouseMovesSubscriber.dispose());
+            */
+            // Dragable
+            /*
+            Rx.dom = {};
+            var events = "blur focus focusin focusout load resize scroll unload click dblclick " +
+                    "mousedown mouseup mousemove mouseover mouseout mouseenter mouseleave " +
+                    "change select submit keydown keypress keyup error contextmenu";
+            events.split(' ').forEach(function (e) {
+                Rx.dom[e] = function (element, selector) {
+                    return Rx.Observable.fromEvent(element, e, selector);
+                };
+            });
+            
+            */
+           /*
+            var draggable = document.getElementById('draggable');
+            draggable.style.position = "absolute";
+            draggable.style.left = "100px"; 
+            draggable.style.top = "100px";
+
+            var mousedrag = Rx.DOM.mousedown(draggable)
+                    .flatMap(function (md) {
+                        md.preventDefault();
+                        var start = getLocation(md);
+                        return Rx.dom.mousemove(document)
+                                .map((mm) => getDelta(start, mm))
+                                .takeUntil(Rx.dom.mouseup(document));
+            }).subscribe(function(e) {
+                console.log("mousedrag subscriber 1", e, e.obj.style.left, e.obj.style.top);
+                e.obj.style.left = e.dx + "px"; 
+                e.obj.style.top = e.dy + "px";
+                console.log("mousedrag subscriber 2", e, e.obj.clientX, e.obj.clientY);
+            });
+             
+*/
+/*
+            function getDelta(start, mm){
+                var obj = {
+                    "obj": start.obj,
+                    "dx": mm.clientX-start.dx,
+                    "dy": mm.clientY-start.dy
+                };
+                console.log("getDelta", obj);
+                return obj;
+            };
+            
+            function getLocation(md){
+                var e = md.originalTarget;
+                var obj = {
+                    "obj": e,
+                    "dx" : md.clientX - e.offsetLeft,  
+                    "dy" : md.clientY - e.offsetTop,  
+                    "x": md.clientX,
+                    "y": md.clientY
+                }
+    
+                console.log("getLocation", md, obj);
+                return obj;
+            }
+*/
+
+    var questionsUI = document.getElementById("questions");
+    var questionUI = document.getElementById("question");
+    var addQuestion = (q) => {
+        console.log(q);
+        var str = "("; 
+        str += q.answer_count;
+        str += ":";
+        str += q.view_count;
+        str += ") [";
+        for(var i = 0; i < q.tags.length; i++){
+            str += q.tags[i];
+            str += " ";
+        }
+        str += "]";
+        
+        var div = document.createElement("DIV");
+        var a = document.createElement("A");
+        div.appendChild(a);
+        div.appendChild(document.createTextNode(str))
+        
+        a.href=q.link;
+        a.appendChild(document.createTextNode(q.title))
+        questions.appendChild(div);
+        Rx.DOM.mouseover(div).subscribe(Rx.Observer.create(
+                (x) => showQuestion(q)));
+    };
+    
+    function showQuestion(q){
+        questionUI.innerHTML = "<h2>"+q.title+"</h2><p>" +q.body+"</p>";
+    }
+    
+    
+    Rx.DOM.ajax({ url: 'https://api.stackexchange.com/2.2/questions?pagesize=2&order=desc&sort=creation&tagged=git&site=stackoverflow&filter=withbody', 
+        responseType: 'json', crossDomain:true})
+            .tap(x => console.log(x.response.items))
+            .flatMap( data => Rx.Observable.from(data.response.items))
+            .subscribe(createSOObserver(addQuestion));
+
+    var mouseOver = Rx.Observable.fromEvent(questionsUI, "mouseover"); 
+    var mouseMovesSubscriber = mouseOver.subscribe(createObserver("MOUSEOVER"));
+
+    
+    function* fibonacci () {
+        var fn1 = 1;
+        var fn2 = 1;
+        while (1){
+            var current = fn2;
+            fn2 = fn1;
+            fn1 = fn1 + current;
+            yield current;
+        }
+    };
+            
+    function createObserver(tag) {
+        return Rx.Observer.create(
+                (x) => debug('[' + tag + '] Next: ' + JSON.stringify(x), x),
+                (err) => debug('[' + tag + '] Error: ' + JSON.stringify(err)),
+                () => debug('[' + tag + '] Completed'))
+    };
+    function createSOObserver(onNext) {
+        return Rx.Observer.create(
+                (q) => onNext(q),
+                (err) => debug('Error: ' + JSON.stringify(err)),
+                () => debug('Completed'))
+    };
+        </script>
+    </body>
+</html>
