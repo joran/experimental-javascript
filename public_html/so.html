@@ -14,8 +14,8 @@ and open the template in the editor.
 
     </head>
     <body>
-        <div id="questions">QS</div>
-        <div id="question">Q</div>
+        <div id="questions"></div>
+        <div id="question"></div>
 
         <script>
     var transformEventToTypedEvent = function(type){
@@ -27,8 +27,8 @@ and open the template in the editor.
         };
       };
 
-    var questionsUI = document.getElementById("questions");
-    var questionUI = document.getElementById("question");
+    var listView = document.getElementById("questions");
+    var detailView = document.getElementById("question");
 
     var questionElement = function(q){
         var str = "(";
@@ -67,8 +67,9 @@ and open the template in the editor.
       };
 
     function appendQuestionElement(q){
-        questions.appendChild(q);
+        listView.appendChild(q);
     };
+
     function observer(onNext, onError, onCompleted) {
         return Rx.Observer.create(onNext, onError, onCompleted);
     };
@@ -83,9 +84,9 @@ and open the template in the editor.
       return null;
     };
 
-    var mouseOverSrc = Rx.DOM.mouseover(questionsUI).map(transformEventToTypedEvent("mouseover"));
-    var mouseLeaveSrc = Rx.DOM.mouseleave(questionsUI).map(transformEventToTypedEvent("mouseleave"));
-    var mouseOutSrc = Rx.DOM.mouseout(questionsUI).map(transformEventToTypedEvent("mouseout"));
+    var mouseOverSrc = Rx.DOM.mouseover(listView).map(transformEventToTypedEvent("mouseover"));
+    var mouseLeaveSrc = Rx.DOM.mouseleave(listView).map(transformEventToTypedEvent("mouseleave"));
+    var mouseOutSrc = Rx.DOM.mouseout(listView).map(transformEventToTypedEvent("mouseout"));
 
     var questionsSrc =
     Rx.DOM.ajax({ url: 'https://api.stackexchange.com/2.2/questions?pagesize=2&order=desc&sort=creation&tagged=git&site=stackoverflow&filter=withbody',
@@ -93,10 +94,34 @@ and open the template in the editor.
             .flatMap( (data) => Rx.Observable.from(data.response.items))
             .map(transformEventToTypedEvent("ajax"));
 
+
+    var model = function(){
+      var subject = new Rx.Subject();
+      var state = {};
+      var setState = function(newState){
+          var prevState = state;
+          state = newState;
+          subject.onNext({
+            state:state,
+            prevState:prevState
+          });
+      };
+      var getState = ()=> merge({},state);
+      var subscribe = (x) => subject.subscribe(x);
+      return {
+          setState: setState,
+          getState: getState,
+          subscribe: subscribe
+      }
+    }();
+
+    model.subscribe(observer((x) => console.log("MODEL", JSON.stringify(x))));
+    model.setState({
+      elementMap:{}
+    })
     var state = {
-      elementMap: {},
-      currentVisibleQid:0
-    };
+      elementMap:{}
+    }
 
     var source = Rx.Observable.merge(mouseOutSrc, mouseOverSrc, questionsSrc);
     source.subscribe(observer(function(evt){
@@ -106,7 +131,10 @@ and open the template in the editor.
           var elem = questionElement(evt.data);
           state.elementMap[elem.root.dataset.qid] = elem;
           appendQuestionElement(elem.root);
-          console.log(elem.root.classList);
+          var s = model.getState();
+          s.elementMap[elem.root.dataset.qid] = elem;
+          model.setState(s);
+          //subject.onNext(elem);
           break;
         case "mouseover":
             var questionRootElem = findQustionRootElem(evt.data.target);
@@ -131,7 +159,7 @@ and open the template in the editor.
 /*
     function showQuestion(x,q){
         console.log(x,q);
-        questionUI.innerHTML = "<h2>"+q.title+"</h2><p>" +q.body+"</p>";
+        detailView.innerHTML = "<h2>"+q.title+"</h2><p>" +q.body+"</p>";
     }
 */
     /*
@@ -144,12 +172,30 @@ and open the template in the editor.
 //            .tap((x) => Rx.DOM.mouseleave(x).subscribe(console.log))
 
 
-    //var mouseOver = Rx.Observable.fromEvent(questionsUI, "mouseover");
+    //var mouseOver = Rx.Observable.fromEvent(listView, "mouseover");
     //var mouseMovesSubscriber = mouseOver.subscribe(createObserver("MOUSEOVER"));
 
     function observer(onNext, onError, onCompleted) {
         return Rx.Observer.create(onNext, onError, onCompleted);
     };
+
+    function merge(obj1, obj2) {
+      var obj = {};
+
+      for (var x in obj1){
+        if (obj1.hasOwnProperty(x)){
+          obj[x] = obj1[x];
+        }
+      }
+
+      for (var x in obj2){
+        if (obj2.hasOwnProperty(x)){
+          obj[x] = obj2[x];
+        }
+      }
+
+      return obj;
+    }
         </script>
     </body>
 </html>
