@@ -88,7 +88,7 @@ function main(responses){
 
   function productsView(prods){
     return prods.length ?
-      h('table', headers.concat(prods.map(productView))) :
+      h('table.table .table-striped .table-borderd', headers.concat(prods.map(productView))) :
       h('h3', 'Loading..')
   };
 
