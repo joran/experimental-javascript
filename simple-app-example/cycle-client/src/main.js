@@ -43,34 +43,6 @@ function main(responses){
     //state$.subscribe(x => console.log("STATE subscribe", x));
 
     // -- View --
-    function renderUser(user){
-        console.log("renderUser", JSON.stringify(user));
-        return h('tr', [
-            h('td', h('a.linkshowuser', {href:"#", rel:user.username}, user.username)),
-            h('td', user.email),
-            h('td', h('a.linkdeleteuser', {href:"#", rel:user._id}, 'delete'))
-        ]);
-    }
-
-    function renderUserList(users){
-        return h('table', [
-            h('thead',[
-                h('tr', [
-                    h('th', 'Username'),
-                    h('th', 'Email'),
-                    h('th', 'Delete')
-                ])
-            ]),
-            h('tbody',
-                users.map(renderUser)
-            )
-        ]);
-    }
-
-    function renderUserInfo(user){
-        return h('strong', 'Name:')
-    }
-
     let vtree$ = Cycle.Rx.Observable.just([]).map(x =>
         h('div', [
             h('h1', 'Cycle.js app client'),
@@ -78,25 +50,42 @@ function main(responses){
             h('div#wrapper', [
                 h('div#userInfo', [
                     h('h2', 'User Info'),
-                    h('p', showUser$.map(u => h('div',
-                    [
-                        h('strong', 'Name:'),
-                        h('span#userInfoName', u),
-                        h('br'),
-                        h('strong', 'Age:'),
-                        h('span#userInfoAge'),
-                        h('br'),
-                        h('strong', 'Gender:'),
-                        h('span#userInfoGender'),
-                        h('br'),
-                        h('strong', 'Location:'),
-                        h('span#userInfoLocation')
-                    ]
-                )))
-              ]), // div#userInfo
+                    h('p', showUser$.map(u =>
+                        h('div',[
+                            h('strong', 'Name:'),
+                            h('span#userInfoName', u),
+                            h('br'),
+                            h('strong', 'Age:'),
+                            h('span#userInfoAge'),
+                            h('br'),
+                            h('strong', 'Gender:'),
+                            h('span#userInfoGender'),
+                            h('br'),
+                            h('strong', 'Location:'),
+                            h('span#userInfoLocation')
+                        ])
+                    ))
+                ]), // div#userInfo
                 h('div#userList', [
                     h('h2', 'User List'),
-                ].concat(state$.map(renderUserList)))
+                ].concat(state$.map(users =>
+                    h('table', [
+                        h('thead',[
+                            h('tr', [
+                                h('th', 'Username'),
+                                h('th', 'Email'),
+                                h('th', 'Delete')
+                            ])
+                        ]),
+                        h('tbody', users.map(user =>
+                            h('tr', [
+                                h('td', h('a.linkshowuser', {href:"#", rel:user.username}, user.username)),
+                                h('td', user.email),
+                                h('td', h('a.linkdeleteuser', {href:"#", rel:user._id}, 'delete'))
+                            ])
+                        ))
+                    ]) // table
+                ))) //div#userInfo
             ]) // div#wrapper
         ]) // div
     );
