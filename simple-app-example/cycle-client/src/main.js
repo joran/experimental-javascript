@@ -24,12 +24,27 @@ function main(responses){
         .mergeAll()
         .map(res => res.body)
         .startWith([])
-        .tap(resp => console.log("RESPONSE", resp));
+        .tap(resp => console.log("RESPONSE", JSON.stringify(resp)));
 
+    let mod$ = user$
+        .flatMap(users => Cycle.Rx.Observable.fromArray(users))
+        .map(u => function(oldList){
+            return oldList.concat([u])
+        })
+
+    let state$ = mod$
+        .startWith([])
+        //.merge(??)
+        .scan(function(acc, mod){
+            return mod(acc);
+        })
+        .tap(x => console.log("STATE", JSON.stringify(x)))
+
+    //state$.subscribe(x => console.log("STATE subscribe", x));
 
     // -- View --
     function renderUser(user){
-        console.log("renderUser", user);
+        console.log("renderUser", JSON.stringify(user));
         return h('tr', [
             h('td', h('a.linkshowuser', {href:"#", rel:user.username}, user.username)),
             h('td', user.email),
@@ -38,7 +53,6 @@ function main(responses){
     }
 
     function renderUserList(users){
-        console.log("renderUserList", users, users.length === 0);
         return h('table', [
             h('thead',[
                 h('tr', [
@@ -53,9 +67,10 @@ function main(responses){
         ]);
     }
 
-    function showUserInfo(user){
-        return h('div', JSON.stringify(user));
+    function renderUserInfo(user){
+        return h('strong', 'Name:')
     }
+
     let vtree$ = Cycle.Rx.Observable.just([]).map(x =>
         h('div', [
             h('h1', 'Cycle.js app client'),
@@ -63,16 +78,27 @@ function main(responses){
             h('div#wrapper', [
                 h('div#userInfo', [
                     h('h2', 'User Info'),
-                    h('p', showUser$.map(user =>
-                        h('div', JSON.stringify(user))
-                    ))
-                ]),
+                    h('p', showUser$.map(u => h('div',
+                    [
+                        h('strong', 'Name:'),
+                        h('span#userInfoName', u),
+                        h('br'),
+                        h('strong', 'Age:'),
+                        h('span#userInfoAge'),
+                        h('br'),
+                        h('strong', 'Gender:'),
+                        h('span#userInfoGender'),
+                        h('br'),
+                        h('strong', 'Location:'),
+                        h('span#userInfoLocation')
+                    ]
+                )))
+              ]), // div#userInfo
                 h('div#userList', [
                     h('h2', 'User List'),
-                ].concat(user$.map(renderUserList)))
-                
-            ])
-        ])
+                ].concat(state$.map(renderUserList)))
+            ]) // div#wrapper
+        ]) // div
     );
 
     return{
