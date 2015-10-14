@@ -19,26 +19,42 @@ function main(responses){
         .startWith(null)
 
     // -- Model --
-    let user$ = responses.HTTP
+    let receivedUser$ = responses.HTTP
         .filter(res$ => res$.request.url.indexOf(USERS_URL) === 0)
         .mergeAll()
         .map(res => res.body)
         .startWith([])
         .tap(resp => console.log("RESPONSE", JSON.stringify(resp)));
 
-    let mod$ = user$
+    let userModel$ = receivedUser$
         .flatMap(users => Cycle.Rx.Observable.fromArray(users))
         .map(u => function(oldList){
             return oldList.concat([u])
         })
-
-    let state$ = mod$
         .startWith([])
         //.merge(??)
         .scan(function(acc, mod){
             return mod(acc);
         })
-        .tap(x => console.log("STATE", JSON.stringify(x)))
+        .tap(x => console.log("userModel", JSON.stringify(x)))
+
+    let selectedUserModel$ =
+        showUser$.withLatestFrom([userModel$],
+            function(selUserId, users){
+                let selUsers = users.filter(u => u.username === selUserId);
+                let selUser = {};
+                if(selUsers.length > 0){
+                    selUser = selUsers[0];
+                }
+                return selUser;
+            }
+        )
+        .tap(x => console.log("selectedUserModel tap", JSON.stringify(x)));
+
+    let state = {
+        selectedUser$: selectedUserModel$,
+        users$: userModel$
+    }
 
     //state$.subscribe(x => console.log("STATE subscribe", x));
 
@@ -50,25 +66,25 @@ function main(responses){
             h('div#wrapper', [
                 h('div#userInfo', [
                     h('h2', 'User Info'),
-                    h('p', showUser$.map(u =>
+                    h('p', state.selectedUser$.map(u =>
                         h('div',[
                             h('strong', 'Name:'),
-                            h('span#userInfoName', u),
+                            h('span#userInfoName', u.username),
                             h('br'),
                             h('strong', 'Age:'),
-                            h('span#userInfoAge'),
+                            h('span#userInfoAge', ""+(u.age||"")),
                             h('br'),
                             h('strong', 'Gender:'),
-                            h('span#userInfoGender'),
+                            h('span#userInfoGender', u.gender),
                             h('br'),
                             h('strong', 'Location:'),
-                            h('span#userInfoLocation')
+                            h('span#userInfoLocation', u.location)
                         ])
                     ))
                 ]), // div#userInfo
                 h('div#userList', [
                     h('h2', 'User List'),
-                ].concat(state$.map(users =>
+                ].concat(state.users$.map(users =>
                     h('table', [
                         h('thead',[
                             h('tr', [
