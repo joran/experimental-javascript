@@ -4,6 +4,7 @@ import {makeHTTPDriver} from '@cycle/http';
 
 function main(responses){
     const USERS_URL = "http://localhost:3000/users/userlist"
+    const USERS_ADD_URL = "http://localhost:3000/users/adduser"
 
     // -- Intent --
     let getUser$ = Cycle.Rx.Observable.just("")
@@ -18,7 +19,39 @@ function main(responses){
         .map(ev => ev.target.rel)
         .startWith(null)
 
+    let addUser$ = responses.DOM.select('button.btnAddUser').events('click')
+        .map(ev => true)
+        .startWith(false);
+
+    let userChanges = [
+        responses.DOM.select('input.inputUserName').events('input')
+            .map(ev => ev.target.value)
+            .startWith(''),
+        responses.DOM.select('input.inputUserEmail').events('input')
+            .map(ev => ev.target.value)
+            .startWith(''),
+        responses.DOM.select('input.inputUserFullname').events('input')
+            .map(ev => ev.target.value)
+            .startWith(''),
+        responses.DOM.select('input.inputUserAge').events('input')
+            .map(ev => ev.target.value)
+            .startWith(''),
+        responses.DOM.select('input.inputLocationAge').events('input')
+            .map(ev => ev.target.value)
+            .startWith(''),
+        responses.DOM.select('input.inputGenderAge').events('input')
+            .map(ev => ev.target.value)
+            .startWith('')
+        ];
+
+
     // -- Model --
+    let addUserModel$ = addUser$.withLatestFrom(userChanges,
+        function(click, username, email, fullname,age,location,gender){
+            return {username, email, fullname,age,location,gender}
+        }
+    )
+
     let receivedUser$ = responses.HTTP
         .filter(res$ => res$.request.url.indexOf(USERS_URL) === 0)
         .mergeAll()
@@ -26,20 +59,20 @@ function main(responses){
         .startWith([])
         .tap(resp => console.log("RESPONSE", JSON.stringify(resp)));
 
-    let userModel$ = receivedUser$
-        .flatMap(users => Cycle.Rx.Observable.fromArray(users))
+    let usersModel$ = receivedUser$
+        .flatMap(Cycle.Rx.Observable.fromArray)
+        .merge(addUserModel$.filter(u => u.username.length > 0 ))
         .map(u => function(oldList){
             return oldList.concat([u])
         })
         .startWith([])
-        //.merge(??)
         .scan(function(acc, mod){
             return mod(acc);
         })
-        .tap(x => console.log("userModel", JSON.stringify(x)))
+        .tap(x => console.log("usersModel", JSON.stringify(x)))
 
     let selectedUserModel$ =
-        showUser$.withLatestFrom([userModel$],
+        showUser$.withLatestFrom([usersModel$],
             function(selUserId, users){
                 let selUsers = users.filter(u => u.username === selUserId);
                 let selUser = {};
@@ -53,10 +86,8 @@ function main(responses){
 
     let state = {
         selectedUser$: selectedUserModel$,
-        users$: userModel$
+        users$: usersModel$
     }
-
-    //state$.subscribe(x => console.log("STATE subscribe", x));
 
     // -- View --
     let vtree$ = Cycle.Rx.Observable.just([]).map(x =>
@@ -68,16 +99,16 @@ function main(responses){
                     h('h2', 'User Info'),
                     h('p', state.selectedUser$.map(u =>
                         h('div',[
-                            h('strong', 'Name:'),
+                            h('strong', 'Name: '),
                             h('span#userInfoName', u.username),
                             h('br'),
-                            h('strong', 'Age:'),
+                            h('strong', 'Age: '),
                             h('span#userInfoAge', ""+(u.age||"")),
                             h('br'),
-                            h('strong', 'Gender:'),
+                            h('strong', 'Gender: '),
                             h('span#userInfoGender', u.gender),
                             h('br'),
-                            h('strong', 'Location:'),
+                            h('strong', 'Location: '),
                             h('span#userInfoLocation', u.location)
                         ])
                     ))
@@ -99,9 +130,25 @@ function main(responses){
                                 h('td', user.email),
                                 h('td', h('a.linkdeleteuser', {href:"#", rel:user._id}, 'delete'))
                             ])
-                        ))
+                        )
+                    )
                     ]) // table
-                ))) //div#userInfo
+                ))), //div#userInfo
+                h('div.addUser', [
+                    h('h2', 'Add user'),
+                    h('fieldset', [
+                        h('input.inputUserName', {type:'text', placeholder:'Username'}),
+                        h('input.inputUserEmail', {type:'text', placeholder:'Email'}),
+                        h('br'),
+                        h('input.inputUserFullname', {type:'text', placeholder:'Full name'}),
+                        h('input.inputUserAge', {type:'text', placeholder:'Age'}),
+                        h('br'),
+                        h('input.inputUserLocation', {type:'text', placeholder:'Location'}),
+                        h('input.inputUserGender', {type:'text', placeholder:'gender'}),
+                        h('br'),
+                        h('button.btnAddUser', 'Add User')
+                    ])
+                ]) // div#addUser
             ]) // div#wrapper
         ]) // div
     );
