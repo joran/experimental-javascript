@@ -49,7 +49,20 @@ router.get('/userlist', function(req, res) {
 }
  * POST to adduser.
  */
-router.post('/adduser', function(req, res) {
+router.options('/adduser',supportCrossOriginScript, function(req, res) {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+
+    var db = req.db;
+    var collection = db.get('userlist');
+    collection.find({},{},function(e,docs){
+        //res.json(docs);
+    });
+    res.json({});
+});
+
+router.post('/adduser',supportCrossOriginScript, function(req, res) {
     var db = req.db;
     var collection = db.get('userlist');
     collection.insert(req.body, function(err, result){
@@ -57,7 +70,7 @@ router.post('/adduser', function(req, res) {
             (err === null) ? { msg: '' } : { msg: err }
         );router.get('/userlist', function(req, res) {
             res.header('Access-Control-Allow-Origin', '*');
-            res.header('Access-Control-Allow-Methods', 'GET, POST');
+            res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
             res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
 
             var db = req.db;
