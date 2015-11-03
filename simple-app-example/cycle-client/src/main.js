@@ -53,6 +53,7 @@ function main(responses){
     )
 
     let receivedUser$ = responses.HTTP
+        .tap(resp => console.log("RESPONSE 1", JSON.stringify(resp)))
         .filter(res$ => res$.request.url.indexOf(USERS_URL) === 0)
         .mergeAll()
         .map(res => res.body)
@@ -90,6 +91,38 @@ function main(responses){
     }
 
     // -- View --
+    // addUserModel$.subscribe(function(x){
+    //     let clearValueOnElement = function(selector){
+    //         let elemUsername = document.querySelector(selector);
+    //         if(elemUsername){
+    //                 elemUsername.value="";
+    //         }
+    //     };
+    //     console.log("addUserModel subscribe", x);
+    //     [
+    //         "input.inputUserName",
+    //         "input.inputUserEmail",
+    //         "input.inputUserFullname",
+    //         "input.inputUserAge",
+    //         "input.inputUserLocation",
+    //         "input.inputUserGender"
+    //     ].forEach(clearValueOnElement)
+    //
+    // });
+
+    let inputSelectors =
+    [
+        "input.inputUserName",
+        "input.inputUserEmail",
+        "input.inputUserFullname",
+        "input.inputUserAge",
+        "input.inputUserLocation",
+        "input.inputUserGender"
+    ];
+
+    // let inputSelector$ = Cycle.Rx.Observable.just(inputSelectors);
+    // addUserModel$.combineLatest(inputSelector$).subscribe(x => console.log("addUserModel$.subscribe", x))
+
     let vtree$ = Cycle.Rx.Observable.just([]).map(x =>
         h('div', [
             h('h1', 'Cycle.js app client'),
@@ -137,7 +170,7 @@ function main(responses){
                 h('div.addUser', [
                     h('h2', 'Add user'),
                     h('fieldset', [
-                        h('input.inputUserName', {type:'text', placeholder:'Username'}),
+                        h('input.inputUserName', {type:'text', placeholder:'Username', value:'asdf'}),
                         h('input.inputUserEmail', {type:'text', placeholder:'Email'}),
                         h('br'),
                         h('input.inputUserFullname', {type:'text', placeholder:'Full name'}),
@@ -156,7 +189,16 @@ function main(responses){
     return{
         DOM: vtree$,
         HTTP: getUser$
-    }
+        .merge(addUserModel$
+            .filter(u => u.username.length > 0 )
+            .map(u => {
+                return {
+                    url: USERS_ADD_URL,
+                    method: "POST",
+                    send: u
+                }
+            }))
+        }
 }
 
 Cycle.run(main, {
