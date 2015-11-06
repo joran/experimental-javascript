@@ -68,7 +68,8 @@ router.post('/adduser',supportCrossOriginScript, function(req, res) {
     collection.insert(req.body, function(err, result){
         res.send(
             (err === null) ? { msg: '' } : { msg: err }
-        );router.get('/userlist', function(req, res) {
+        );
+        router.get('/userlist', function(req, res) {
             res.header('Access-Control-Allow-Origin', '*');
             res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
             res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
