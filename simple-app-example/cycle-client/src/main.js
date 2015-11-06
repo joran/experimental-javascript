@@ -36,10 +36,10 @@ function main(responses){
         responses.DOM.select('input.inputUserAge').events('input')
             .map(ev => ev.target.value)
             .startWith(''),
-        responses.DOM.select('input.inputLocationAge').events('input')
+        responses.DOM.select('input.inputUserLocation').events('input')
             .map(ev => ev.target.value)
             .startWith(''),
-        responses.DOM.select('input.inputGenderAge').events('input')
+        responses.DOM.select('input.inputUserGender').events('input')
             .map(ev => ev.target.value)
             .startWith('')
         ];
