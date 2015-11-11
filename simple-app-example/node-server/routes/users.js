@@ -27,7 +27,7 @@ router.get('/userlist', function(req, res) {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-
+console.log("router get userlist")
     var db = req.db;
     var collection = db.get('userlist');
     collection.find({},{},function(e,docs){
@@ -66,22 +66,20 @@ router.post('/adduser',supportCrossOriginScript, function(req, res) {
     var db = req.db;
     var collection = db.get('userlist');
     collection.insert(req.body, function(err, result){
+      /*
         res.send(
             (err === null) ? { msg: '' } : { msg: err }
         );
-        router.get('/userlist', function(req, res) {
-            res.header('Access-Control-Allow-Origin', '*');
-            res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-            res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+        */
+          res.header('Access-Control-Allow-Origin', '*');
+          res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+          res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
 
-            var db = req.db;
-            var collection = db.get('userlist');
-            collection.find({},{},function(e,docs){
-                res.json(docs);
-            });
-        });
-
-
+          var db = req.db;
+          var collection = db.get('userlist');
+          collection.find({},{},function(e,docs){
+              res.json(docs);
+          });
     });
 });
 
@@ -89,13 +87,34 @@ router.post('/adduser',supportCrossOriginScript, function(req, res) {
 /*
  * DELETE to deleteuser.
  */
-router.delete('/deleteuser/:id', function(req, res) {
+ router.options('/deleteuser/:id',supportCrossOriginScript, function(req, res) {
+     res.header('Access-Control-Allow-Origin', '*');
+     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, DELETE');
+     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+     console.log("router options deleteuser");
+
+     var db = req.db;
+     var collection = db.get('userlist');
+     collection.find({},{},function(e,docs){
+         //res.json(docs);
+     });
+     res.json({});
+ });
+router.get('/deleteuser/:id', supportCrossOriginScript, function(req, res) {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, DELETE');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    var id = req.params.id;
+    console.log("router.delete", id);
     var db = req.db;
     var collection = db.get('userlist');
-    var userToDelete = req.params.id;
-    collection.remove({ '_id' : userToDelete }, function(err) {
-        res.send((err === null) ? { msg: '' } : { msg:'error: ' + err });
+    collection.remove({ 'username' : id }, function(err, result) {
+      console.log("router.delete err", err, result);
     });
+      collection.find({},{},function(e,docs){
+          res.json(docs);
+      });
+
 });
 
 module.exports = router;
