@@ -3,16 +3,19 @@ import {h, makeDOMDriver} from '@cycle/dom';
 import {makeHTTPDriver} from '@cycle/http';
 
 function main(responses){
-    const USERS_URL = "http://localhost:3000/users/userlist"
-    const USER_ADD_URL = "http://localhost:3000/users/adduser"
-    const USER_DELETE_URL = "http://localhost:3000/users/deleteuser"
+    const HOST = "http://localhost:3000";
+    const USERS_URL = HOST + "/users/userlist";
+    const USER_ADD_URL = HOST + "/users/adduser";
+    const USER_DELETE_URL = HOST + "/users/deleteuser";
 
     // -- Intent --
     let selectUser$ = responses.DOM.select('.linkshowuser').events('click')
+        .tap(ev => ev.preventDefault())
         .map(ev => ev.target.rel)
         .startWith(null)
 
     let removeUser$ = responses.DOM.select('a.linkdeleteuser').events('click')
+        .tap(ev => ev.preventDefault())
         .map(ev => ev.target.rel)
         .startWith(null);
 
@@ -188,7 +191,6 @@ function main(responses){
     let deleteUser = removeUser$
         .filter(id => id != null && id != undefined )
         .map(id => USER_DELETE_URL+"/"+id)
-        .tap(x => console.log("tap deleteUser", x))
         .map(id => {
             return {
               url: id,
